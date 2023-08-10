@@ -1,0 +1,20 @@
+# Archivos de Unity
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ibrary/
+Assets/AssetStoreTools*
+
+# Archivos de respaldo de Mono Auto Save
+*.bak
+
+# Archivos de VS Code
+.vscode/
+*.userprefs
+*.csproj
+*.unityproj
+*.sln
+
+# macOS
+.DS_Store
