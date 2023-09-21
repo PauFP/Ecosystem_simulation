@@ -1,184 +1,135 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class Movement_final : MonoBehaviour
 {
 
-    public enum AgentState
-    {
-        Wander,
-        ChaseFood,
-        ChaseAgent
-    }
-
-    public AgentState currentState = AgentState.Wander;
-
-    public float turnSpeed = 0.01f;
-    public float movementSpeed;
+    public float turnSpeed = 10f;
+    public int movementSpeed;
+    // Update is called once per frame
     Quaternion qTo;
     public FieldOfView fov;
     public int EatenFood;
     Quaternion rotGoal;
 
-    private Vector3? currentTarget = null; // Usamos un Vector3 nullable para representar el objetivo
 
     private void Start()
     {
-        fov = GetComponent<FieldOfView>();
-        InvokeRepeating("ChangeRotation", 1f, Random.Range(1, 5));
-    }
 
-    void ChangeRotation()
+
+        fov = GetComponent<FieldOfView>();
+
+        InvokeRepeating("ChangeRotation", 1f, Random.Range(1, 5));
+
+
+    }
+    public void ChangeRotation()
     {
         qTo = Quaternion.Euler(new Vector3(0, Random.Range(-180, 180), 0));
+
+
     }
 
+    public void StopRandomRotation()
+    {
+        CancelInvoke("ChangeRotation");
+    }
+
+    public void StartRandomRotation()
+    {
+        if (!IsInvoking("ChangeRotation"))
+        {
+            InvokeRepeating("ChangeRotation", 1f, Random.Range(1, 5));
+        }
+    }
     private void Update()
     {
-        switch (currentState)
+
+        /*if (!fov.canSeePlayer && !fov.canSeeFood)
         {
-            case AgentState.Wander:
-                if (fov.canSeePlayer)
-                {
-                    Debug.Log(gameObject.name + " ha detectado a otro agente.");
-
-                    ChangeState(AgentState.ChaseAgent);
-                }
-                else if (fov.canSeeFood)
-                {
-                    ChangeState(AgentState.ChaseFood);
-                }
-                else
-                {
-                    Movement();
-                }
-                break;
-
-            case AgentState.ChaseAgent:
-                if (!fov.canSeePlayer || (currentTarget.HasValue && Vector3.Distance(transform.position, currentTarget.Value) <= 0.1f))
-                {
-                    // Has alcanzado al agente o ya no lo ves. 
-                    currentTarget = null;
-                    ChangeState(AgentState.Wander);
-                }
-                else
-                {
-                    MoveToPlayer();
-                }
-                break;
-
-            case AgentState.ChaseFood:
-                if (!fov.canSeeFood || (currentTarget.HasValue && Vector3.Distance(transform.position, currentTarget.Value) <= 0.1f))
-                {
-                    // Has alcanzado la comida o ya no la ves.
-                    currentTarget = null;
-                    ChangeState(AgentState.Wander);
-                }
-                else
-                {
-                    MoveToFood();
-                }
-                break;
+            Movement();
         }
-    }
-
-    void ChangeState(AgentState newState)
-    {
-        if (currentState != newState)
+        else if (fov.canSeeFood)
         {
-            if (newState == AgentState.Wander)
-            {
-                InvokeRepeating("ChangeRotation", 1f, Random.Range(1, 5));
-            }
-            else
-            {
-                print("Cancelado");
-                CancelInvoke("ChangeRotation");
-            }
+            MoveToFood();
 
-            currentState = newState;
+        }*/
+        if (fov.isBeingChased && fov.detectedPredator)
+        {
+            // Obtener la dirección de huida
+            Vector3 fleeDirection = (transform.position - fov.detectedPredator.position).normalized;
+
+            fleeDirection.y = 0;
+            // Mover al jugador en la dirección de huida
+            transform.position += fleeDirection * movementSpeed * Time.deltaTime;
         }
-    }
-
-    void Movement()
-    {
-        transform.rotation = Quaternion.Slerp(transform.rotation, qTo, turnSpeed);
-        transform.position += transform.forward * movementSpeed * Time.deltaTime;
-    }
-
-    void MoveToPlayer()
-    {
-        // Nota: Aquí hemos movido la lógica de detección del jugador fuera del bloque condicional,
-        // para que siempre estemos comprobando y actualizando la posición del jugador.
-        foreach (Vector3 pos in Spawner.playerPositions)
+        else
         {
-            Vector3 directionToPos = (pos - fov.transform.position).normalized;
-            if (Vector3.Angle(fov.transform.forward, directionToPos) < fov.angle / 2)
+            if (!fov.canSeeFood)
             {
-                float mod_radius = fov.radius + 5;
-                if (Vector3.Distance(fov.transform.position, pos) <= mod_radius)
-                {
-                    currentTarget = pos; // Actualiza el objetivo
-                    break;
-                }
+                Movement();
+            }
+            else if (fov.canSeeFood)
+            {
+                MoveToFood();
             }
         }
+        
 
-        if (currentTarget.HasValue)
-        {
-            GoTowards(currentTarget.Value);
-        }
+
     }
 
 
     void MoveToFood()
     {
-        if (currentTarget.HasValue)
-        {
-            GoTowards(currentTarget.Value);
-            return;
-        }
-
+        bool canSeeFood = false;
         foreach (Vector3 pos in Spawner.foodPositions)
         {
+
             Vector3 directionToPos = (pos - fov.transform.position).normalized;
             if (Vector3.Angle(fov.transform.forward, directionToPos) < fov.angle / 2)
             {
-                float mod_radius = fov.radius + 2;
-                if (Vector3.Distance(fov.transform.position, pos) <= mod_radius)
+                if (Vector3.Distance(fov.transform.position, pos) <= fov.radius)
                 {
-                    currentTarget = pos; // Fija el objetivo
-                    GoTowards(pos);
-                    break;
+                    if (directionToPos != Vector3.zero)
+                    {
+                        rotGoal = Quaternion.LookRotation(directionToPos, Vector3.up);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, turnSpeed);
+                    }
+                    transform.position = Vector3.MoveTowards(transform.position, pos, movementSpeed * Time.deltaTime);
+                    canSeeFood = true;
+                    break; // salir del bucle si se detecta al jugador
                 }
             }
         }
-    }
-    /*void GoTowards(Vector3 target)
-    {
-        Vector3 directionToTarget = (target - transform.position).normalized;
-        if (directionToTarget != Vector3.zero)
+        fov.canSeeFood = canSeeFood; // establecer la variable canSeePlayer en el objeto fov
+        if (canSeeFood == false)
         {
-            rotGoal = Quaternion.LookRotation(directionToTarget, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, turnSpeed);
+            Movement();
         }
-        transform.position = Vector3.MoveTowards(transform.position, target, movementSpeed * Time.deltaTime);
+    }
+    public void Movement()
+    {
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, qTo, turnSpeed);
+
+        transform.position += transform.forward * movementSpeed * Time.deltaTime;
+
+
+
+    }
+    /*private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.tag == "Food"){
+            Destroy(collision.gameObject);
+            Spawner.foodPositions.Remove(collision.gameObject.transform.position);
+            //Debug.Log(Spawner.foodPositions.Count);
+            EatenFood += 1;
+            //fov.position_list.Remove(collision.gameObject.transform.position);
+            //fov.foodList.Remove(collision.gameObject);
+        }
     }*/
 
-    void GoTowards(Vector3 target)
-    {
-        Vector3 directionToTarget = (target - transform.position).normalized;
-
-        if (directionToTarget!= Vector3.zero)
-        {
-            rotGoal = Quaternion.LookRotation(directionToTarget, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, turnSpeed);
-        }
-        transform.position = Vector3.MoveTowards(transform.position, target, movementSpeed * Time.deltaTime);
-
-    }
 
 }
-

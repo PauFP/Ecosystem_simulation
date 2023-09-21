@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.Linq;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 
 public class Timer : MonoBehaviour
 {
@@ -15,7 +19,9 @@ public class Timer : MonoBehaviour
     public TextMeshProUGUI days;
     public TextMeshProUGUI vTime;
     public TextMeshProUGUI secs;
-    public TextMeshProUGUI nAgents;
+    public TextMeshProUGUI nPreses;
+    public TextMeshProUGUI nDepredadors;
+
 
     public float customTimeScale = 1.0f;
 
@@ -35,10 +41,11 @@ public class Timer : MonoBehaviour
         vTime.text = "VELOCITAT TEMPS:  " + customTimeScale + "x";
         Time.timeScale = customTimeScale;
 
-        int agents = GameObject.FindGameObjectsWithTag("Player").Length;
-        nAgents.text = "Nº Agents: " + agents.ToString();
+        int players = GameObject.FindGameObjectsWithTag("Player").Length;
+        nPreses.text = "Nº Preses: " + players.ToString();
 
-
+        int predators = GameObject.FindGameObjectsWithTag("Predator").Length;
+        nDepredadors.text = "Nº Depredadors: " + predators.ToString();
     }
 
     void cicles()
@@ -53,7 +60,9 @@ public class Timer : MonoBehaviour
         if (cicle == 1000 && !diaSumado) // Modificar esta condición
         {
             dia += 1;
-            diaSumado = true; // Establecer la variable a true cuando se suma un día          
+            diaSumado = true; // Establecer la variable a true cuando se suma un día
+            StopPlayingInEditor();
+
         }
 
         // Reiniciar la variable diaSumado cuando cicle no sea 1000
@@ -75,5 +84,10 @@ public class Timer : MonoBehaviour
         customTimeScale = 0.0f;
     }
 
-
+    void StopPlayingInEditor()
+    {
+    #if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+    #endif
+    }
 }

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2125304183247965347}
   - component: {fileID: 6207635512030195726}
   - component: {fileID: 4929694062729520953}
+  - component: {fileID: 5220229332806755589}
   m_Layer: 8
   m_Name: player
   m_TagString: Player
@@ -129,6 +130,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e20bc67c5da5a3448b00b149f0a11ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  detectedPlayer: {fileID: 0}
+  detectedPredator: {fileID: 0}
   radius: 0
   angle: 0
   playerRef: {fileID: 0}
@@ -141,8 +144,14 @@ MonoBehaviour:
   playerMask:
     serializedVersion: 2
     m_Bits: 256
+  predatorMask:
+    serializedVersion: 2
+    m_Bits: 512
   canSeeFood: 0
   canSeePlayer: 0
+  canSeePredator: 0
+  isChasing: 0
+  isBeingChased: 0
 --- !u!114 &6207635512030195726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,4 +188,17 @@ MonoBehaviour:
   birthTime: 0
   lifeTime: 0
   fitness: 0
+  spawner: {fileID: 0}
+--- !u!114 &5220229332806755589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6207635512030195727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57ea99cd525084246ad31f87e799b5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   spawner: {fileID: 0}

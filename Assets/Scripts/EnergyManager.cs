@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class EnergyManager : MonoBehaviour
 {
+    private float energyReductionInterval = 10.0f; // reduce energy every 1 second
+    private float timeSinceLastReduction = 0.0f;
+
+
     public float reproductionEnergy = 50f; // La energía necesaria para reproducirse
     //private float reproductionRate = 10; // La tasa de reproducción en segundos
     public float lastReproductionTime;
@@ -50,14 +55,35 @@ public class EnergyManager : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, previousPosition); // Calcular la distancia recorrida en el último fotograma
         distanceTraveled += distance;
-        
+
+        // Si la distancia es mayor que un cierto umbral, ajustarla
+        if (distance >= 10)
+        {
+            distance = 0f; // o algún otro valor que consideres adecuado
+        }
         //float time = distance; ; // Calcular el tiempo que tardó en recorrer esa distancia
         //float time = Time.deltaTime/ Time.timeScale;
 
-         // Acumular la distancia total recorrida
+        // Acumular la distancia total recorrida
         //energy -= time * energyCostPerMeter; // Reducir la energía en función del 
 
-        energy -= distance * (energyCostPerMeter / movement.movementSpeed);
+        //print(energy);
+
+
+        timeSinceLastReduction += Time.deltaTime;
+
+        if (timeSinceLastReduction >= energyReductionInterval)
+        {
+            energy -= distance * energyCostPerMeter * movement.movementSpeed;
+            // Reduce energy based on vision radius and other factors
+            energy -= (fov.radius + (fov.angle / 180.0f * 5));
+            // or any other calculation you have
+            // Reset the timer
+
+
+            timeSinceLastReduction = 0.0f;
+        }
+
         // -= distance * (energyCostPerMeter / Movement_final.movementSpeed);
 
         /* // Calcular la distancia recorrida en el último fotograma
@@ -70,7 +96,7 @@ public class EnergyManager : MonoBehaviour
         if (energy <= 0)
         {
             lifeTime = Time.time - birthTime;
-            spawner.creatures_list.Remove(gameObject);
+            spawner.players_list.Remove(gameObject);
             Destroy(gameObject);
             
             //controller.creatureList.remove(gameObject);
@@ -104,6 +130,8 @@ public class EnergyManager : MonoBehaviour
             CalculateFitness();
         }
 
+        
+
         /*if (collision.collider.CompareTag("Player"))
         {
             if (energy >= reproductionEnergy && Time.time - lastReproductionTime >= reproductionRate)
@@ -119,49 +147,10 @@ public class EnergyManager : MonoBehaviour
         }*/
 
     }
-    void Reproduce()
-{
-
-        // Crear un nuevo agente en la misma posición
-        GameObject newAgent = Instantiate(gameObject, transform.position, Quaternion.identity);
-        Renderer renderer = newAgent.GetComponent<Renderer>();
-        Color newColor = Color.blue;
-        renderer.material.color = newColor;
-
-
-        // Dividir la energía con el nuevo agente
-        EnergyManager newAgentEnergy = newAgent.GetComponent<EnergyManager>();
-        newAgentEnergy.energy = 20;
-        energy /= 2;
-        newAgentEnergy.eatedFood = 0;
-        birthTime = Time.time;
-        lifeTime = Time.time - birthTime;
-        
-        // Actualizar el último tiempo de reproducción
-        lastReproductionTime = Time.time;
-
-        /*
-        CreatureGenes parentGenes = GetComponent<CreatureGenes>();
-        CreatureGenes offspringGenes = newAgent.GetComponent<CreatureGenes>();
-
-
-        offspringGenes.movementSpeedGene = (parentGenes.movementSpeedGene + parentGenes.movementSpeedGene) / 2f + Random.Range(-0.5f, 0.5f);
-        // Puedes ajustar la tasa de mutación modificando los valores de Random.Range()
-        offspringGenes.sizeGene = (parentGenes.sizeGene + parentGenes.sizeGene) / 2f + Random.Range(-0.1f, 0.1f);
-        offspringGenes.fovRadiusGene = (parentGenes.fovRadiusGene + parentGenes.fovRadiusGene) / 2f + Random.Range(-2f, 2f);
-        offspringGenes.fovAngleGene = (parentGenes.fovAngleGene + parentGenes.fovAngleGene) / 2f + Random.Range(-10f, 10f);
-
-
-        // Asegurarse de que los genes no sean menores de los valores mínimos permitidos
-        offspringGenes.movementSpeedGene = Mathf.Max(offspringGenes.movementSpeedGene, 1f);
-        offspringGenes.sizeGene = Mathf.Max(offspringGenes.sizeGene, 1f);
-        offspringGenes.fovRadiusGene = Mathf.Max(offspringGenes.fovRadiusGene, 1f);
-        offspringGenes.fovAngleGene = Mathf.Clamp(offspringGenes.fovAngleGene, 10f, 360f);*/
-
-    }
+   
 
     public void CalculateFitness()
     {
-        fitness = lifeTime * 0.15f + eatedFood * 0.75f;
+        fitness = lifeTime * 0.70f + eatedFood * 0.25f;
     }
 }
