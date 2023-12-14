@@ -1,5 +1,5 @@
 # Simulació d'una cadena tròfica mitjançant algoritmes genètics - Pau Fernández Pujol 
-Implementació en Unity de la simulació presentada en el TdR
+Implementació en Unity de la simulació presentada en el TdR 2023
 
 ![image](https://github.com/PauFP/Ecosystem_simulation/assets/104688711/48f2101e-3aec-4f19-9059-5ca6698e90e2)
 
